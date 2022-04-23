@@ -2,8 +2,8 @@ FROM python:3.10-alpine3.15
 LABEL maintainer='Mikhail Nikolaev'
 
 ENV PYTHONUNBUFFERED 1
-RUN apk update && apk add --update --no-cache --virtual .build-deps \
-    python3-dev postgresql-dev musl-dev gcc && \
+RUN apk update && apk add --update postgresql-dev && \
+    apk add --update --no-cache --virtual .build-deps python3-dev musl-dev gcc && \
     python -m venv /py && \
     /py/bin/pip install --upgrade pip
 

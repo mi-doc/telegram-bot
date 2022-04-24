@@ -3,3 +3,4 @@ psycopg2==2.9.*
 redis==4.2.*
 celery==5.2.*
 pytelegrambotapi
+Pillow

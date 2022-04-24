@@ -1,9 +1,9 @@
 from django.core.management.base import BaseCommand
-from ...bot import bot
+from ...bot import start_echo_bot
 
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        print('AAUUUUUGA')
-        bot.infinity_polling()
+        print('Starting echo bot. AUUUUUGA')
+        start_echo_bot()
 

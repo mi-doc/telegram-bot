@@ -23,7 +23,7 @@ services:
              python manage.py wait_for_db &&
              python manage.py makemigrations &&
              python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000
+             python manage.py startbot 
       "
     ports:
       - "8000:8000"
@@ -39,6 +39,7 @@ services:
       - DB_PASS=${DB_PASS}
       - SECRET_KEY=${SECRET_KEY}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
     depends_on:
       - db
 

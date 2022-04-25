@@ -1,6 +1,7 @@
-from django.apps import AppConfig
-import sys
 import os
+import sys
+
+from django.apps import AppConfig
 
 
 class EchoBotConfig(AppConfig):
@@ -8,19 +9,19 @@ class EchoBotConfig(AppConfig):
     name = 'echo_bot'
 
     def ready(self):
+        """
+        We need to launch bot only once after django server starts. Otherwise it will start
+        multiple times when this module is imported.
+        """
         if 'runserver' not in sys.argv:
-            '''
-            We need to launch bot only once after django server starts. Otherwise it will start
-            multiple times when this module is imported.
-            '''
             return True
-
 
         state = int(os.getenv('ECHO_BOT_STARTED', None))
         if state:
             return True
 
+        # from .bot import start_echo_bot
+        # start_echo_bot.delay()
         from .tasks import start_bot
         start_bot()
         os.environ['ECHO_BOT_STARTED'] = '1'
-

@@ -1,5 +1,6 @@
 import os
 from tempfile import TemporaryFile
+from django.core.files.images import ImageFile
 from celery import shared_task
 
 import telebot
@@ -46,10 +47,27 @@ TOKEN = os.getenv('TELEGRAM_TOKEN', None)
 #     i.save()
 
 
+
+
+
+
 @shared_task
-def start_echo_bot(token):
-    t_token = token
-    bot = telebot.TeleBot(t_token, parse_mode=None)
+def start_echo_bot():
+    bot = telebot.TeleBot(TOKEN, parse_mode=None)
+
+    @bot.message_handler(content_types=['photo'])
+    def upload_photo(message):
+        file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+        img_temp = TemporaryFile()
+        img_temp.write(downloaded_file)
+        img_temp.flush()
+        img_name = file_info.file_path.split('/')[-1]
+
+        i = Image.objects.create()
+        i.image.save(img_name, img_temp)
+        i.save()
+        bot.reply_to(message, i.image.url)
 
     @bot.message_handler(func=lambda message: True)
     def send_welcome(message):
@@ -61,5 +79,6 @@ def start_echo_bot(token):
             img.close()
         else:
             bot.reply_to(message, "Bot is listening to you. NEW CHANGE")
+
 
     bot.infinity_polling()

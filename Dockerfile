@@ -15,4 +15,3 @@ RUN /py/bin/pip install -r requirements.txt && \
 ENV PATH="/py/bin:$PATH"
 
 COPY . /telegram-bot/
-

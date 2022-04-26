@@ -13,8 +13,8 @@ class Subject(models.Model):
 
 def upload_directory_path(instance, filename):
     if not instance.subject:
-        return filename
-    return '{0}/{1}'.format(instance.subject.name, filename)
+        return f"other/{filename}" 
+    return f"{instance.subject.name}/{filename}" 
 
 
 class Image(models.Model):

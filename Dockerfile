@@ -5,13 +5,11 @@ ENV PYTHONUNBUFFERED 1
 RUN apk update && apk add --update postgresql-dev libjpeg && \
     apk add --update --no-cache --virtual .build-deps  \
     python3-dev musl-dev gcc libc-dev linux-headers zlib-dev jpeg-dev && \
-    python -m venv /py && \
-    /py/bin/pip install --upgrade pip
+    pip install --upgrade pip
 
 COPY requirements.txt /telegram-bot/requirements.txt
 WORKDIR /telegram-bot
-RUN /py/bin/pip install -r requirements.txt && \
+RUN pip install -r requirements.txt && \
     apk del .build-deps
-ENV PATH="/py/bin:$PATH"
 
 COPY . /telegram-bot/

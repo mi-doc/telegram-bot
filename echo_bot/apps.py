@@ -22,6 +22,9 @@ class EchoBotConfig(AppConfig):
 
         # from .bot import start_echo_bot
         # start_echo_bot.delay()
-        from .tasks import start_bot
-        start_bot()
+        # from .tasks import start_bot
+        # start_bot()
+
+        from .bot import start_asyncio_bot
+        start_asyncio_bot()
         os.environ['ECHO_BOT_STARTED'] = '1'

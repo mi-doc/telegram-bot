@@ -2,6 +2,7 @@ import os
 from tempfile import TemporaryFile
 
 import telebot
+from telebot import types
 from celery import shared_task
 
 from .models import Image
@@ -39,7 +40,31 @@ def start_echo_bot():
             img = open(img_path, 'rb')
             bot.send_photo(message.chat.id, img, reply_to_message_id=message.message_id)
             img.close()
+
         else:
-            bot.reply_to(message, "Bot is listening to you. NEW CHANGE")
+            # bot.reply_to(message, "Bot is listening to you. NEW CHANGE")
+            keyboard = types.InlineKeyboardMarkup()
+            images = Image.objects.all()
+            buttons = []
+            for image in images:
+                if not image.image or not image.image.url:
+                    continue
+
+                if image.subject:
+                    text = f"{image.subject.name} - {image.pk}"
+                else:
+                    text = image.pk
+                buttons.append(types.InlineKeyboardButton(text=text, callback_data=image.pk))
+            keyboard.add(*buttons)
+
+            bot.send_message(message.chat.id, 'Images', reply_markup=keyboard)
+
+    @bot.callback_query_handler(func=lambda call: True)
+    def callback_inline(call):
+        img_instance = Image.objects.get(id=call.data)
+        img_path = f'staticfiles{img_instance.image.url}'
+        img = open(img_path, 'rb')
+        bot.send_photo(call.message.chat.id, img)
+        img.close()
 
     bot.infinity_polling()

@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from echo_bot.views import index
+from album_bot.views import index
 
 urlpatterns = [
     path('admin/', admin.site.urls),

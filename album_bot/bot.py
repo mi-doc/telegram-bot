@@ -10,7 +10,7 @@ from .models import Image
 TOKEN = os.getenv('TELEGRAM_TOKEN', None)
 
 
-@shared_task
+# @shared_task
 def start_echo_bot():
     bot = telebot.TeleBot(TOKEN, parse_mode=None)
 

@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
                 ('image', models.ImageField(upload_to='images/')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
-                ('subject', models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE, to='echo_bot.subject')),
+                ('subject', models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE, to='album_bot.subject')),
             ],
             options={
                 'verbose_name': 'Image',

@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'new_app',
-    'echo_bot'
+    'album_bot'
 ]
 
 MIDDLEWARE = [

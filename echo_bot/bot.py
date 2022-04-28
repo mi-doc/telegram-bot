@@ -61,10 +61,15 @@ def start_echo_bot():
 
     @bot.callback_query_handler(func=lambda call: True)
     def callback_inline(call):
-        img_instance = Image.objects.get(id=call.data)
-        img_path = f'staticfiles{img_instance.image.url}'
-        img = open(img_path, 'rb')
-        bot.send_photo(call.message.chat.id, img)
-        img.close()
+        # img_instance = Image.objects.get(id=call.data)
+        images = Image.objects.get_images_with_files_uploaded()[:10]
+        medias = []
+        for image in images:
+            img_path = f'staticfiles{image.image.url}'
+            img = open(img_path, 'rb')
+            # bot.send_photo(call.message.chat.id, img)
+            medias.append(types.InputMediaPhoto(img))
+
+        bot.send_media_group(call.message.chat.id, medias)
 
     bot.infinity_polling()

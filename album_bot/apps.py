@@ -20,8 +20,8 @@ class EchoBotConfig(AppConfig):
         if state:
             return True
 
-        # from .bot import start_echo_bot
-        # start_echo_bot.delay()
+        # from .bot import start_album_bot
+        # start_album_bot.delay()
         from .tasks import start_bot
-        start_bot()
         os.environ['ECHO_BOT_STARTED'] = '1'
+        start_bot()

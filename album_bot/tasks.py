@@ -1,6 +1,5 @@
-from album_bot.bot import start_echo_bot
+from album_bot.bot import start_album_bot
 
 
 def start_bot():
-    # start_echo_bot.delay()
-    start_echo_bot()
+    start_album_bot()

@@ -25,3 +25,4 @@ class EchoBotConfig(AppConfig):
         from .tasks import start_bot
         os.environ['ECHO_BOT_STARTED'] = '1'
         start_bot()
+

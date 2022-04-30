@@ -2,23 +2,15 @@ from django.db import models
 from tempfile import TemporaryFile
 
 
-class Subject(models.Model):
+class Album(models.Model):
     name = models.CharField(max_length=64, verbose_name="Name")
     user_id = models.CharField(max_length=64, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True, auto_now=False)
     updated = models.DateTimeField(auto_now_add=False, auto_now=True)
 
     class Meta:
-        verbose_name = "Subject"
-        verbose_name_plural = "Subjects"
-
-
-
-
-# def upload_directory_path(instance, filename):
-#     if not instance.subject:
-#         return f"other/{filename}"
-#     return f"{instance.subject.name}/{filename}"
+        verbose_name = "Album"
+        verbose_name_plural = "Albums"
 
 
 class ImageManager(models.Manager):
@@ -29,7 +21,7 @@ class ImageManager(models.Manager):
 
 class Image(models.Model):
     user_id = models.CharField(max_length=64, blank=True, null=True)
-    subject = models.ForeignKey(Subject, blank=True, null=True, default=None, on_delete=models.CASCADE)
+    album = models.ForeignKey(Album, blank=True, null=True, default=None, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='images/')
     media_group_id = models.BigIntegerField(blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True, auto_now=False)
@@ -41,9 +33,9 @@ class Image(models.Model):
         verbose_name = "Image"
         verbose_name_plural = "Images"
 
-    def assign_to_subject_and_media_group(self, subject_name=None, subject_instance=None, media_group_id=None):
-        subj = subject_instance or Subject.objects.get_or_create(user_id=self.user_id, name=subject_name)[0]
-        self.subject = subj
+    def assign_to_album(self, album_name=None, album_instance=None, media_group_id=None):
+        subj = album_instance or Album.objects.get_or_create(user_id=self.user_id, name=album_name)[0]
+        self.album = subj
         self.save()
 
     @classmethod
@@ -61,8 +53,8 @@ class Image(models.Model):
         return new_img
 
     @classmethod
-    def get_all_subject_images(cls, *, subject_name=None, subject_id=None):
-        keyword = {'subject__id': subject_id} if subject_id else {'subject__name': subject_name}
+    def get_all_album_images(cls, *, album_name=None, album_id=None):
+        keyword = {'album__id': album_id} if album_id else {'album__name': album_name}
         filter_by_sbj = cls.objects.filter(**keyword)
 
         values = filter_by_sbj.filter(media_group_id__isnull=False).values_list('media_group_id', flat=True).distinct()
@@ -74,7 +66,7 @@ class UserState(models.Model):
     class State(models.TextChoices):
         INIT = '1', 'Initial'
         SENT_PHOTO = '2', 'Photo is sent'
-        CREATE_NEW_SUBJECT = '3', 'Creating new subject'
+        CREATE_NEW_SUBJECT = '3', 'Creating new album'
 
     user_id = models.CharField(max_length=64, blank=True, null=True)
     state = models.CharField(max_length=2, choices=State.choices, default=State.INIT)

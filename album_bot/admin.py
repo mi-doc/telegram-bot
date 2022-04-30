@@ -1,12 +1,12 @@
 from django.contrib import admin
-from .models import Subject, Image
+from .models import Album, Image
 
 
 class ImageInline(admin.TabularInline):
     model = Image
 
 
-@admin.register(Subject)
+@admin.register(Album)
 class SubjectAdmin(admin.ModelAdmin):
     inlines = [ImageInline]
 

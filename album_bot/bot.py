@@ -45,7 +45,7 @@ def start_album_bot():
     @bot.callback_query_handler(func=lambda call: call.data.startswith('album_id'))
     def callback_inline(call):
         album_pk = call.data.split('__')[1]
-        images = Image.get_all_album_images(album_id=album_pk)
+        images = Image.objects.get_all_album_images(album_id=album_pk)
         if not images:
             bot.send_message(call.message.chat.id, 'No images here yet')
 
@@ -59,10 +59,6 @@ def start_album_bot():
             bot.send_media_group(call.message.chat.id, medias)
             images = images[10:]
 
-    # @bot.message_handler(commands=['resize'])
-    # def resize_image(message):
-    #     i = Image.objects.get_images_with_files_uploaded()[10]
-
     # User uploading new photo
     @bot.message_handler(content_types=['photo'])
     def upload_photo(message):
@@ -70,8 +66,9 @@ def start_album_bot():
         downloaded_file = bot.download_file(file_info.file_path)
         img_name = file_info.file_path.split('/')[-1]
 
-        image = Image.create_from_telegram_data(image_name=img_name, downloaded_file=downloaded_file,
-                                                user_id=message.from_user.id, media_group_id=message.media_group_id)
+        image = Image.objects.create_from_telegram_data(image_name=img_name, downloaded_file=downloaded_file,
+                                                        user_id=message.from_user.id,
+                                                        media_group_id=message.media_group_id)
 
         # If we already have an image with similar media_group_id that means we are processing a set of images
         # and will automatically assign them to the same album name as the first image
@@ -82,15 +79,14 @@ def start_album_bot():
             if image.pk > Image.objects.filter(media_group_id=mgid).order_by('pk').first().pk:
                 return True
 
-        UserState.update_user_state_to_sent_photo(user_id=message.from_user.id)
+        UserState.objects.update_user_state(user_id=message.from_user.id, new_state=UserState.State.SENT_PHOTO)
         keyboard = types.InlineKeyboardMarkup()
         albums = Album.objects.all()
-        buttons = []
-        buttons.append(types.InlineKeyboardButton(text='Create new album', callback_data='album__create_new'))
+        buttons = [types.InlineKeyboardButton(text='Create new album', callback_data='album__create_new')]
         for album in albums:
             buttons.append(types.InlineKeyboardButton(text=album.name, callback_data=f"album__{album.pk}"))
         keyboard.add(*buttons)
-        bot.send_message(message.chat.id, 'Pick a album to attach it to or chose to create a new one',
+        bot.send_message(message.chat.id, 'Pick an album to add it to or create a new one',
                          reply_markup=keyboard)
 
     @bot.message_handler(func=lambda message: True)
@@ -98,20 +94,20 @@ def start_album_bot():
         user_id = message.from_user.id
         # Check if user has sent a photo (i.e. user's state is 'sent_photo'),
         # so the next user's message should be the album of photo
-        user_state = UserState.get_for_user_id(user_id=user_id).state
+        user_state = UserState.objects.get_for_user_id(user_id=user_id).state
         if user_state == UserState.State.SENT_PHOTO:
             # Getting the last image sent by user from DB
-            image = Image.get_last_image_sent_by_user(user_id=user_id)
+            image = Image.objects.get_last_image_sent_by_user(user_id=user_id)
             # Assign it so specified album
-            image.assign_to_album(album_name=message.text, media_group_id=image.media_group_id)
+            image.add_to_album(album_name=message.text)
             # Return the user's state back to initial
-            UserState.update_user_state_to_init(user_id=user_id)
-            text = 'image' if not image.media_group_id else 'images'
-            bot.send_message(message.chat.id, f'Album of the {text} is successfully specified')
+            UserState.objects.update_user_state(user_id=user_id, new_state=UserState.State.INIT)
+            text = 'Image is' if not image.media_group_id else 'Images are'
+            bot.send_message(message.chat.id, f'{text} successfully added to "{message.text}" album')
 
-        elif user_state == UserState.State.CREATE_NEW_SUBJECT:
-            if album := Album.objects.filter(user_id=user_id, name=message.text):
-                alb = album.first()
+        elif user_state == UserState.State.CREATE_NEW_ALBUM:
+            if alb := Album.objects.filter(user_id=user_id, name=message.text):
+                alb = alb.first()
                 keyboard = types.InlineKeyboardMarkup()
                 keyboard.add(
                     types.InlineKeyboardButton(text=f"Use {alb.name}", callback_data=f'album__{alb.pk}')
@@ -121,12 +117,12 @@ def start_album_bot():
 
             else:
                 # Getting the last image sent by user from DB
-                image = Image.get_last_image_sent_by_user(user_id=user_id)
-                image.assign_to_album(album_name=message.text, media_group_id=image.media_group_id)
+                image = Image.objects.get_last_image_sent_by_user(user_id=user_id)
+                image.add_to_album(album_name=message.text)
                 # Return the user's state back to initial
-                UserState.update_user_state_to_init(user_id=user_id)
-                text = 'image' if not image.media_group_id else 'images'
-                bot.send_message(message.chat.id, f'Album of the {text} is successfully specified')
+                UserState.objects.update_user_state(user_id=user_id, new_state=UserState.State.INIT)
+                text = 'Image is' if not image.media_group_id else 'Images are'
+                bot.send_message(message.chat.id, f'{text} successfully added to "{message.text}" album')
 
         else:
             # Show buttons with all images
@@ -134,8 +130,8 @@ def start_album_bot():
             images = Image.objects.get_images_with_files_uploaded()
             buttons = []
             for image in images:
-                if image.album:
-                    text = f"{image.album.name} - {image.pk}"
+                if alb := image.get_image_album():
+                    text = f"{alb.name} - {image.pk}"
                 else:
                     text = image.pk
                 buttons.append(types.InlineKeyboardButton(text=text, callback_data=image.pk))
@@ -146,15 +142,16 @@ def start_album_bot():
     def callback_inline(call):
         album_id_or_create = call.data.split('__')[1]
         if album_id_or_create == 'create_new':
-            UserState.update_user_state(user_id=call.from_user.id, new_state=UserState.State.CREATE_NEW_SUBJECT)
-            bot.send_message(call.message.chat.id, 'Please specify a name')
+            UserState.objects.update_user_state(user_id=call.from_user.id, new_state=UserState.State.CREATE_NEW_ALBUM)
+            bot.send_message(call.message.chat.id, 'Please write a name')
         else:
-            image = Image.get_last_image_sent_by_user(user_id=call.from_user.id)
+            image = Image.objects.get_last_image_sent_by_user(user_id=call.from_user.id)
             album = Album.objects.get(pk=album_id_or_create)
             # If it is a part of a media group, we will assign album to the whole album
-            image.assign_to_album(album_instance=album, media_group_id=image.media_group_id)
-            UserState.update_user_state_to_init(user_id=call.from_user.id)
-            bot.send_message(call.message.chat.id, f'The image is assigned to {album.name}')
+            image.add_to_album(album_instance=album)
+            UserState.objects.update_user_state(user_id=call.from_user.id, new_state=UserState.State.INIT)
+            text = 'Image is' if not image.media_group_id else 'Images are'
+            bot.send_message(call.message.chat.id, f'{text} successfully added to "{album.name}" album')
 
     @bot.callback_query_handler(func=lambda call: True)
     def callback_inline(call):

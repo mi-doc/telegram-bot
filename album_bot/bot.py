@@ -9,14 +9,16 @@ from .models import Album, Image, UserState
 TOKEN = os.getenv('TELEGRAM_TOKEN', None)
 
 
-# @shared_task
+@shared_task
 def start_album_bot():
     bot = telebot.TeleBot(TOKEN, parse_mode=None)
 
+    # Info about album bot
     @bot.message_handler(commands=['start', 'help'])
     def send_welcome(message):
         bot.reply_to(message, "Bot is listening to you.")
 
+    # Get buttons with all images
     @bot.message_handler(commands=['showAll'])
     def send_all(message):
         images = Image.objects.get_images_with_files_uploaded()
@@ -32,6 +34,7 @@ def start_album_bot():
             bot.send_media_group(message.chat.id, medias)
             images = images[10:]
 
+    # Get buttons with all albums
     @bot.message_handler(commands=['albums'])
     def show_album(message):
         keyboard = types.InlineKeyboardMarkup()
@@ -42,6 +45,7 @@ def start_album_bot():
         keyboard.add(*buttons)
         bot.send_message(message.chat.id, 'Chose an album', reply_markup=keyboard)
 
+    # Get all images of an album
     @bot.callback_query_handler(func=lambda call: call.data.startswith('album_id'))
     def callback_inline(call):
         album_pk = call.data.split('__')[1]
@@ -89,6 +93,7 @@ def start_album_bot():
         bot.send_message(message.chat.id, 'Pick an album to add it to or create a new one',
                          reply_markup=keyboard)
 
+    # Handling text messages (user input album names)
     @bot.message_handler(func=lambda message: True)
     def send_image_buttons(message):
         user_id = message.from_user.id
@@ -138,6 +143,7 @@ def start_album_bot():
             keyboard.add(*buttons)
             bot.send_message(message.chat.id, 'Pick image', reply_markup=keyboard)
 
+    # Adding images to an album
     @bot.callback_query_handler(func=lambda call: call.data.startswith('album'))
     def callback_inline(call):
         album_id_or_create = call.data.split('__')[1]
@@ -153,6 +159,7 @@ def start_album_bot():
             text = 'Image is' if not image.media_group_id else 'Images are'
             bot.send_message(call.message.chat.id, f'{text} successfully added to "{album.name}" album')
 
+    # Not used
     @bot.callback_query_handler(func=lambda call: True)
     def callback_inline(call):
         image = Image.objects.get(id=call.data)

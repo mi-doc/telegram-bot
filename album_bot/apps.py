@@ -16,8 +16,8 @@ class EchoBotConfig(AppConfig):
         if 'runserver' not in sys.argv:
             return True
 
-        state = int(os.getenv('ECHO_BOT_STARTED', None))
-        if state:
+        bot_already_started = int(os.getenv('ECHO_BOT_STARTED', None))
+        if bot_already_started:
             return True
 
         # from .bot import start_album_bot

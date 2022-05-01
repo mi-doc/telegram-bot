@@ -61,10 +61,20 @@ class ImageManager(models.Manager):
         return filter_by_album.union(filter_by_media_group).order_by('created')
 
 
+def upload_directory_path(image, filename):
+    """
+    Path to save uploaded images
+    :param image: Image instance
+    :param filename: name of the image
+    :return: absolute path in the static root
+    """
+    return f"{image.user_id}/{filename}"
+
+
 class Image(models.Model):
     user_id = models.CharField(max_length=64, blank=True, null=True)
     album = models.ForeignKey(Album, blank=True, null=True, default=None, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='images/')
+    image = models.ImageField(upload_to=upload_directory_path)
     media_group_id = models.BigIntegerField(blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True, auto_now=False)
     updated = models.DateTimeField(auto_now_add=False, auto_now=True)

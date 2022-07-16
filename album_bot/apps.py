@@ -16,7 +16,7 @@ class EchoBotConfig(AppConfig):
         if 'runserver' not in sys.argv:
             return True
 
-        bot_already_started = int(os.getenv('ECHO_BOT_STARTED', None))
+        bot_already_started = bool(int(os.getenv('ECHO_BOT_STARTED', 0)))
         if bot_already_started:
             return True
 

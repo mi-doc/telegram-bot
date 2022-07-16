@@ -25,6 +25,7 @@
 
 # Static
 static/media/
+staticfiles
 
 db.sqlite3
 dev-postgres-data/

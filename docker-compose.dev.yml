@@ -15,13 +15,7 @@ services:
   app:
     build:
       context: .
-    command: >
-      sh -c "
-             python manage.py wait_for_db &&
-             python manage.py makemigrations &&
-             python manage.py migrate &&
-            #  python manage.py runserver 0.0.0.0:8000
-      "
+    command: python manage.py runserver 0.0.0.0:8000
     ports:
       - "8000:8000"
     image: app:django
@@ -29,6 +23,8 @@ services:
       - .:/telegram-bot
     container_name: django-app
     env_file: .env
+    environment:
+      - DEBUG=1
     depends_on:
       - db
 

@@ -15,6 +15,7 @@ services:
   app:
     build:
       context: .
+      dockerfile: Dockerfile.prod
     command: >
       sh -c "
              python manage.py makemigrations &&
@@ -26,7 +27,7 @@ services:
     image: app:django
     container_name: django-app-prod
     volumes:
-      - app_data:/telegram-bot
+      - app_data:/home/telegram-bot/web
     env_file: .env
     environment:
       - DEBUG=0

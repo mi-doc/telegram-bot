@@ -8,7 +8,7 @@ services:
   db:
     image: postgres:14-alpine3.15
     volumes:
-      - ./postgres-data/db:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     env_file: .env
     container_name: postgres_db
 
@@ -19,17 +19,17 @@ services:
       sh -c "
              python manage.py makemigrations &&
              python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000
-      "
+             gunicorn core.wsgi:application --bind 0.0.0.0:8000
+      "    
     ports:
       - "8000:8000"
     image: app:django
+    container_name: django-app-prod
     volumes:
-      - .:/telegram-bot
-    container_name: django-app
+      - app_data:/telegram-bot
     env_file: .env
     environment:
-      - DEBUG=1
+      - DEBUG=0
     depends_on:
       - db
 
@@ -37,15 +37,17 @@ services:
     restart: always
     build:
       context: .
-    command: celery -A core worker -l debug
-    volumes:
-      - .:/telegram-bot
+    command: celery -A core worker -l warning
     container_name: celery
+    volumes:
+      - app_data:/telegram-bot
     env_file: .env
     depends_on:
       - db
       - redis
       - app
 
-
+volumes:
+  postgres_data:
+  app_data:
 

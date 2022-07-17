@@ -10,6 +10,7 @@ class EchoBotConfig(AppConfig):
 
     def ready(self):
         """
+        For debug environment. 
         We need to launch bot only once after django server starts. Otherwise it will start
         multiple times when this module is imported.
         """
